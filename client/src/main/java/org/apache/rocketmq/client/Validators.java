@@ -78,16 +78,23 @@ public class Validators {
         return matcher.matches();
     }
 
+    /**
+     * 检查发送的message是否符合rocketMQ发送规则
+     */
     public static void checkMessage(Message msg, DefaultMQProducer defaultMQProducer)
+        //往外抛异常
         throws MQClientException {
         if (null == msg) {
             throw new MQClientException(ResponseCode.MESSAGE_ILLEGAL, "the message is null");
         }
         // topic
+        //校验设置的topic是否符合规范
         Validators.checkTopic(msg.getTopic());
+        //设置的topic不能是rocketMQ中内置的
         Validators.isNotAllowedSendTopic(msg.getTopic());
 
         // body
+        //校验msg.getBody()是否符合规范
         if (null == msg.getBody()) {
             throw new MQClientException(ResponseCode.MESSAGE_ILLEGAL, "the message body is null");
         }
@@ -102,17 +109,25 @@ public class Validators {
         }
     }
 
+    /**
+     * 检查设置的topic
+     * @param topic
+     * @throws MQClientException
+     */
     public static void checkTopic(String topic) throws MQClientException {
+        //使用了卫语句
         if (UtilAll.isBlank(topic)) {
             throw new MQClientException("The specified topic is blank", null);
         }
 
+        //设置的topic是否含有违规字符-使用正则表达式来判断
         if (!regularExpressionMatcher(topic, PATTERN)) {
             throw new MQClientException(String.format(
                 "The specified topic[%s] contains illegal characters, allowing only %s", topic,
                 VALID_PATTERN_STR), null);
         }
 
+        //设置的topic是否超过topic长度的极限
         if (topic.length() > TOPIC_MAX_LENGTH) {
             throw new MQClientException(
                 String.format("The specified topic is longer than topic max length %d.", TOPIC_MAX_LENGTH), null);
